@@ -1,0 +1,33 @@
+### 0.3 beta
+
+- Added Version # to main Window bottom right
+- Added and Centered Player Name Plate to make Spotting Player Name easier
+- Moved Player Rank from Name to Below Stats right justified
+- Moved Toon Level to its own Icon type of display like class and path
+- Moved what will be a Filter Feature for Raids back to left.
+
+### 0.2 beta
+
+- Fixed upper right close button
+
+### 0.1 beta
+
+- Tighten Up the interface list to remove extra space.
+- Made DKP Editable
+- Added Auto Save Functionality To Store Roster and DKP
+- Added Support to merge new guildies
+- Added a /otgreset command so that data can be cleared during testing
+- The Raid filter is still not functional
+
+### 0.1 Alpha(s)
+
+- Fixed Crispins complaint on scroll wheeling
+- Moved Rank to after player name
+- Positioned Label where the DKP is going to show and be editable
+- Modified The Toons List 
+- Used Icons and Tool Tip for Class instead of word
+- Used Icons and Tool Tip for Path instead of word
+- Presented Toon Level in brackets after Toon Name
+- Changed Ok Button to Save But it still isn't hooked to anything yet
+- Added Filter Toggle for Filtering by Whoes in Raid Currently - Not hooked to anything yet
+- Attachments area
