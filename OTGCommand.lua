@@ -44,7 +44,7 @@ local OTGCommand = {}
 -----------------------------------------------------------------------------------------------
 local kcrSelectedText = ApolloColor.new("UI_BtnTextHoloPressedFlyby")
 local kcrNormalText = ApolloColor.new("UI_BtnTextHoloNormal")
-local kVersion = "0.3-beta"
+local kVersion = "0.4-beta"
  
 -----------------------------------------------------------------------------------------------
 -- Initialization
@@ -180,6 +180,13 @@ end
 -----------------------------------------------------------------------------------------------
 function OTGCommand:OnCancel()
 	self.wndMain:Close()
+end
+
+function OTGCommand:DoSuicideDKP(wndHandler, wndControl)
+	local playerandrank = wndHandler:GetParent():FindChild("PlayerName"):GetText()
+	local player = string.gsub(playerandrank , "^(.*)%s%[.*$", "%1") 
+	wndHandler:GetParent():FindChild("PlayerDKP"):SetText(0)
+	self.tGuildTable[player].dkp = 0
 end
 
 function OTGCommand:DoChangeDKP(wndHandler, wndControl)
@@ -407,7 +414,7 @@ function OTGCommand:AddGuildie(guildie, guildiedata)
 		toonwnd:SetData(toon)		
 	end
 	local nContainerLeft, nContainerTop, nContainerRight, nContainerBottom = wnd:GetAnchorOffsets()
-	wnd:SetAnchorOffsets(nContainerLeft, nContainerTop, nContainerRight, (tooncount * 39)+20)
+	wnd:SetAnchorOffsets(nContainerLeft, nContainerTop, nContainerRight, (tooncount * 39)+25)
 		
 	nContainerLeft, nContainerTop, nContainerRight, nContainerBottom = toonslist:GetAnchorOffsets()
 	toonslist:SetAnchorOffsets(nContainerLeft, nContainerTop, nContainerRight, tooncount * 39)	
