@@ -44,7 +44,7 @@ local OTGCommand = {}
 -----------------------------------------------------------------------------------------------
 local kcrSelectedText = ApolloColor.new("UI_BtnTextHoloPressedFlyby")
 local kcrNormalText = ApolloColor.new("UI_BtnTextHoloNormal")
-local kVersion = "0.5-beta"
+local kVersion = "0.6-beta"
  
 -----------------------------------------------------------------------------------------------
 -- Initialization
@@ -59,6 +59,7 @@ function OTGCommand:new(o)
 	o.tPlayersCount = 0
 	o.wndSelectedPlayer = nil 
 	o.wndSelectedToon = nil
+	o.tSortBy = "Player"
 	o.bDocLoaded = false
 	o.bResetData = false
 		
@@ -86,12 +87,14 @@ function OTGCommand:OnSave(eType)
 	if self.bResetData == false then
 		tSave["tPlayers"] = self.tPlayers
 		tSave["tGuildTable"] = self.tGuildTable
-		tSave["tPlayersCount"] = self.tPlayersCount	
+		tSave["tPlayersCount"] = self.tPlayersCount
+		tSave["tSortBy"] = self.tSortBy	
 		tSave["VERSION"] = kVersion
 	else
 		tSave["tPlayers"] = {}
 		tSave["tGuildTable"] = {}
 		tSave["tPlayersCount"] = 0
+		tSave["tSortBy"] = "Player"
 		tSave["VERSION"] = kVersion
 	end		
 	return tSave	
@@ -109,6 +112,9 @@ function OTGCommand:OnRestore(eType, tSavedData)
 	if tSavedData.tPlayersCount ~= nil then
 		self.tPlayersCount = tSavedData.tPlayersCount		
 	end
+	if tSavedData.tSortBy ~= nil then
+		self.tSortBy = tSavedData.tSortBy					
+	end	
 end
 
 
@@ -137,12 +143,7 @@ function OTGCommand:OnDocLoaded()
 		self.wndItemList = self.wndMain:FindChild("ItemList")
 		self.wndMain:FindChild("LabelVersion"):SetText(kVersion)
 	    self.wndMain:Show(false, true)
-
-		-- if the xmlDoc is no longer needed, you should set it to nil
-		-- self.xmlDoc = nil
-		
-		-- Register handlers for events, slash commands and timer, etc.
-		-- e.g. Apollo.RegisterEventHandler("KeyDown", "OnKeyDown", self)
+	
 		Apollo.RegisterSlashCommand("otg", "OnOTGCommandOn", self)
  		Apollo.RegisterSlashCommand("otgreset", "OnOTGCommandResetOn", self)
 		Apollo.RegisterEventHandler("GuildRoster", "OnGuildRoster", self)
@@ -150,6 +151,17 @@ function OTGCommand:OnDocLoaded()
 		-- self.timer = ApolloTimer.Create(10.0, true, "OnTimer", self)
 
 		-- Do additional Addon initialization here
+		self.wndMain:FindChild("SortByButton"):AttachWindow(self.wndMain:FindChild("EditSortContainer"))
+		if self.tSortBy == "Player" then
+			self.wndMain:FindChild("SortByButton"):SetText("Sort by: Player")
+		end
+		if self.tSortBy == "DKP" then
+			self.wndMain:FindChild("SortByButton"):SetText("Sort by: DKP")
+		end
+		if self.tSortBy == "Rank" then
+			self.wndMain:FindChild("SortByButton"):SetText("Sort by: Rank")
+		end				
+		self.wndMain:FindChild("ChangeSortToRank"):Enable(false)		
 		self:PopulateGuildList()
  	    ChatSystemLib.PostOnChannel(ChatSystemLib.ChatChannel_System, string.format("OTGCommand %s loaded.", kVersion))
 	end
@@ -194,7 +206,7 @@ function OTGCommand:DoOpenExport( wndHandler, wndControl, eMouseButton )
     self.wndExport = Apollo.LoadForm(self.xmlDoc, "ExportWindow", nil, self)
     local copybtn = self.wndExport:FindChild("CopyToClipboard")
 	local exportStr = "Player\tCurrent DKP\n"
-	for player, playerdata in self:PairsByKeys(self.tGuildTable) do			
+	for player, playerdata in self:PairsByPlayers(self.tGuildTable) do			
 		exportStr = (exportStr .. player .. "\t" .. playerdata.dkp .. "\n") 
 	end	
     copybtn:SetActionData(GameLib.CodeEnumConfirmButtonType.CopyToClipboard, exportStr)
@@ -203,8 +215,49 @@ function OTGCommand:DoOpenExport( wndHandler, wndControl, eMouseButton )
   end
 end
 
+function OTGCommand:OnChangeSortByPlayer(wndHandler, wndControl)
+	if wndControl ~= wndHandler then 
+		return
+	end	
+	wndHandler:GetParent():FindChild("EditSortContainer"):Close()
+	local button = self.wndMain:FindChild("SortByButton")
+	button:SetText("Sort by: Player")
+	self.tSortBy = "Player"	
+	self:PopulateGuildList()		
+end
+
+function OTGCommand:OnChangeSortByDKP(wndHandler, wndControl)
+	if wndControl ~= wndHandler then 
+		return
+	end
+	wndHandler:GetParent():FindChild("EditSortContainer"):Close()	
+	local button = self.wndMain:FindChild("SortByButton")
+	button:SetText("Sort by: DKP")
+	self.tSortBy = "DKP"	
+	self:PopulateGuildList()
+end
+
+function OTGCommand:OnChangeSortByRank(wndHandler, wndControl)
+	if wndControl ~= wndHandler then 
+		return
+	end
+	wndHandler:GetParent():FindChild("EditSortContainer"):Close()	
+	local button = self.wndMain:FindChild("SortByButton")
+	button:SetText("Sort by: Rank")	
+	-- self.tSortBy = "Rank"	
+	-- self:PopulateGuildList()	
+end
+
+function OTGCommand:DoChangeSort(wndHandler, wndControl)
+	if wndControl ~= wndHandler then 
+		return
+	end
+end
 
 function OTGCommand:DoSuicideDKP(wndHandler, wndControl)
+	if wndHandler ~= wndControl then
+        return
+    end
 	local playerandrank = wndHandler:GetParent():FindChild("PlayerName"):GetText()
 	local player = string.gsub(playerandrank , "^(.*)%s%[.*$", "%1") 
 	wndHandler:GetParent():FindChild("PlayerDKP"):SetText(0)
@@ -212,6 +265,9 @@ function OTGCommand:DoSuicideDKP(wndHandler, wndControl)
 end
 
 function OTGCommand:DoChangeDKP(wndHandler, wndControl)
+	if wndHandler ~= wndControl then
+        return
+    end
 	local dkp = wndHandler:GetText()
 	local playerandrank = wndHandler:GetParent():FindChild("PlayerName"):GetText()
 	local player = string.gsub(playerandrank , "^(.*)%s%[.*$", "%1") 
@@ -290,19 +346,43 @@ function OTGCommand:HelperConvertToTime(fDays)
 	return String_GetWeaselString(Apollo.GetString("CRB_TimeOffline"), tTimeInfo)
 end
 
-function OTGCommand:PairsByKeys (t, f)
-      local a = {}
-      for n in pairs(t) do table.insert(a, n) end
-      table.sort(a, f)
-      local i = 0      -- iterator variable
-      local iter = function ()   -- iterator function
+function OTGCommand:PairsByPlayers(t)
+    local a = {}
+    for n in pairs(t) do table.insert(a, n) end
+   	table.sort(a)
+    local i = 0      -- iterator variable
+    local iter = function ()   -- iterator function
         i = i + 1
         if a[i] == nil then return nil
         else return a[i], t[a[i]]
         end
-      end
-      return iter
+    	end
+    return iter
+end
+
+function string:split(sep)
+        local sep, fields = sep or ":", {}
+        local pattern = string.format("([^%s]+)", sep)
+        self:gsub(pattern, function(c) fields[#fields+1] = c end)
+        return fields
+end
+
+function OTGCommand:PairsByDKP(t)
+    local a = {}
+    for player, playerdata in pairs(t) do table.insert(a, (playerdata.dkp .. "-" .. player)) end
+   	table.sort(a, function(a,b) return a > b end)
+    local i = 0      -- iterator variable
+    local iter = function ()   -- iterator function
+        i = i + 1
+        if a[i] == nil then 
+			return nil
+        else
+			parts = a[i]:split("-")		 
+			return parts[2], t[parts[2]]
+        end
     end
+    return iter
+end
 
 -- Based on addon GuildRoster Tools by NCSoft
 function OTGCommand:OnGuildRoster(guildCurr, tGuildRoster)	
@@ -367,9 +447,21 @@ end
 
 function OTGCommand:PopulateGuildList()
 	self:DestroyItemList()
-	for player, playerdata in self:PairsByKeys(self.tGuildTable) do			
-		self:AddGuildie(player, playerdata)
-	end		
+	if self.tSortBy == "Player" then
+		for player, playerdata in self:PairsByPlayers(self.tGuildTable) do			
+			self:AddGuildie(player, playerdata)
+		end		
+	end
+	if self.tSortBy == "DKP" then
+		for player, playerdata in self:PairsByDKP(self.tGuildTable) do								
+			self:AddGuildie(player, playerdata)
+		end		
+	end
+	--if self.tSortBy == "Rank" then
+	--	for player, playerdata in self:PairsByRankPlayers(self.tGuildTable) do			
+	--		self:AddGuildie(player, playerdata)
+	--	end		
+	--end		
 	self.wndItemList:ArrangeChildrenVert()
 end
 
@@ -378,7 +470,6 @@ function OTGCommand:DestroyItemList()
 	for idx,wnd in ipairs(self.tPlayers) do
 		wnd:Destroy()
 	end
-
 	-- clear the list item array
 	self.tPlayers = {}
 	self.wndSelectedPlayer = nil

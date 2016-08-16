@@ -1,3 +1,11 @@
+### 0.6 beta
+
+- Fixed Name plate so player is clickable
+- Removed extraneous clipboard area
+- Added Sort By: Player or DKP Descending, placeholder to sort by Rank
+    - Known issue that I am working on when switching the sort order a reloadui is necessary. :( 
+    - Working on it as it should refresh immediately
+
 ### 0.5 beta
 
 - Added Export Function to Export Player / DKP to Spreadsheets
