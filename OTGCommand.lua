@@ -44,7 +44,7 @@ local OTGCommand = {}
 -----------------------------------------------------------------------------------------------
 local kcrSelectedText = ApolloColor.new("UI_BtnTextHoloPressedFlyby")
 local kcrNormalText = ApolloColor.new("UI_BtnTextHoloNormal")
-local kVersion = "0.4-beta"
+local kVersion = "0.5-beta"
  
 -----------------------------------------------------------------------------------------------
 -- Initialization
@@ -181,6 +181,28 @@ end
 function OTGCommand:OnCancel()
 	self.wndMain:Close()
 end
+
+function OTGCommand:OnCloseExport( wndHandler, wndControl, eMouseButton )
+  wndHandler:GetParent():Show(false)
+  wndHandler:GetParent():Destroy()
+  self.wndExport = nil
+end
+
+function OTGCommand:DoOpenExport( wndHandler, wndControl, eMouseButton )
+  if not self.wndExport then
+    -- self:RebuildExportList()
+    self.wndExport = Apollo.LoadForm(self.xmlDoc, "ExportWindow", nil, self)
+    local copybtn = self.wndExport:FindChild("CopyToClipboard")
+	local exportStr = "Player\tCurrent DKP\n"
+	for player, playerdata in self:PairsByKeys(self.tGuildTable) do			
+		exportStr = (exportStr .. player .. "\t" .. playerdata.dkp .. "\n") 
+	end	
+    copybtn:SetActionData(GameLib.CodeEnumConfirmButtonType.CopyToClipboard, exportStr)
+    self.wndExport:FindChild("ExportString"):SetText(exportStr)
+    self.wndExport:Show(true)
+  end
+end
+
 
 function OTGCommand:DoSuicideDKP(wndHandler, wndControl)
 	local playerandrank = wndHandler:GetParent():FindChild("PlayerName"):GetText()
