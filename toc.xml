@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Addon Author="Diatana Yar" APIVersion="12" Name="OTGCommand" Description="Old Timers Guild Command Modules">
+    <Script Name="OTGCommand.lua"/>
+    <Form Name="OTGCommand.xml"/>
+</Addon>
