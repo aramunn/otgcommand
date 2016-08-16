@@ -1,8 +1,32 @@
 -----------------------------------------------------------------------------------------------
--- Client Lua Script for OTGCommand
--- Copyright (c) Neodevelop. All rights reserved
+-- OTGCommand
+--
+-- MIT License
+-- 
+-- Copyright (c) 2016 Richard Ashwell
+--
+-- Permission is hereby granted, free of charge, to any person obtaining a copy
+-- of this software and associated documentation files (the "Software"), to deal
+-- in the Software without restriction, including without limitation the rights
+-- to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+-- copies of the Software, and to permit persons to whom the Software is
+-- furnished to do so, subject to the following conditions:
+--
+-- The above copyright notice and this permission notice shall be included in all
+-- copies or substantial portions of the Software.
+--
+-- THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+-- IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+-- FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+-- AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+-- LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+-- OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+-- SOFTWARE.
 -----------------------------------------------------------------------------------------------
- 
+
+-----------------------------------------------------------------------------------------------
+-- Required Libraries
+----------------------------------------------------------------------------------------------- 
 require "Window"
 require "Apollo"
 require "GuildLib"
@@ -49,7 +73,10 @@ function OTGCommand:Init()
 	}
     Apollo.RegisterAddon(self, bHasConfigureFunction, strConfigureButtonText, tDependencies)
 end
- 
+
+-----------------------------------------------------------------------------------------------
+-- Save and Restore
+-----------------------------------------------------------------------------------------------
 function OTGCommand:OnSave(eType) 
 	if eType ~= GameLib.CodeEnumAddonSaveLevel.General then
 		return
@@ -148,7 +175,6 @@ function OTGCommand:OnTimer()
 	-- Do your timer-related stuff here.
 end
 
-
 -----------------------------------------------------------------------------------------------
 -- OTGCommandForm Functions
 -----------------------------------------------------------------------------------------------
@@ -176,6 +202,7 @@ function OTGCommand:GetGuild()
 	return tGuild
 end
 
+-- Borrowed from Addon GuildRoster Tools by NCSoft
 function OTGCommand:HelperConvertPathToString(ePath)
 	local strResult = ""
 	if ePath == PlayerPathLib.PlayerPathType_Soldier then
@@ -190,6 +217,7 @@ function OTGCommand:HelperConvertPathToString(ePath)
 	return strResult
 end
 
+-- Borrowed from Addon GuildRoster Tools by NCSoft
 function OTGCommand:HelperConvertToTime(fDays)
 	if fDays == 0 then
 		return Apollo.GetString("ArenaRoster_Online")
@@ -247,6 +275,7 @@ function OTGCommand:PairsByKeys (t, f)
       return iter
     end
 
+-- Based on addon GuildRoster Tools by NCSoft
 function OTGCommand:OnGuildRoster(guildCurr, tGuildRoster)	
 		tDataExport = {}
 		local nDate= os.date("%m/%d/%y")
@@ -315,7 +344,6 @@ function OTGCommand:PopulateGuildList()
 	self.wndItemList:ArrangeChildrenVert()
 end
 
--- clear the item list
 function OTGCommand:DestroyItemList()
 	-- destroy all the wnd inside the list
 	for idx,wnd in ipairs(self.tPlayers) do
@@ -328,7 +356,6 @@ function OTGCommand:DestroyItemList()
 	self.wndSelectedToon = nil
 end
 
--- add an item into the item list
 function OTGCommand:AddGuildie(guildie, guildiedata)
 	local wnd = Apollo.LoadForm(self.xmlDoc, "PlayerItem", self.wndItemList, self)
 	local playerrank = guildiedata.rank
@@ -389,7 +416,6 @@ function OTGCommand:AddGuildie(guildie, guildiedata)
 	self.wndItemList:ArrangeChildrenVert()  
 end
 
--- when a list item is selected
 function OTGCommand:OnPlayerSelected(wndHandler, wndControl)
     if wndHandler ~= wndControl then
         return
