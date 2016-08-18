@@ -1,21 +1,29 @@
-### 0.6 beta
+# CHANGES
+
+## 0.7 beta
+
+- Fix Event Call on GuildRoster to only work once every 4 hours
+- Fix for API 13 Loading
+- Fix for dynamic sort by without reloadui
+
+## 0.6 beta
 
 - Fixed Name plate so player is clickable
 - Removed extraneous clipboard area
 - Added Sort By: Player or DKP Descending, placeholder to sort by Rank
-    - Known issue that I am working on when switching the sort order a reloadui is necessary. :( 
-    - Working on it as it should refresh immediately
+  - Known issue that I am working on when switching the sort order a reloadui is necessary. :( 
+  - Working on it as it should refresh immediately
 
-### 0.5 beta
+## 0.5 beta
 
 - Added Export Function to Export Player / DKP to Spreadsheets
 
-### 0.4 beta
+## 0.4 beta
 
 - Framed DKP Input
 - Added Suicide Button
 
-### 0.3 beta
+## 0.3 beta
 
 - Added Version # to main Window bottom right
 - Added and Centered Player Name Plate to make Spotting Player Name easier
@@ -23,11 +31,11 @@
 - Moved Toon Level to its own Icon type of display like class and path
 - Moved what will be a Filter Feature for Raids back to left.
 
-### 0.2 beta
+## 0.2 beta
 
 - Fixed upper right close button
 
-### 0.1 beta
+## 0.1 beta
 
 - Tighten Up the interface list to remove extra space.
 - Made DKP Editable
@@ -36,7 +44,7 @@
 - Added a /otgreset command so that data can be cleared during testing
 - The Raid filter is still not functional
 
-### 0.1 Alpha(s)
+## 0.1 Alpha(s)
 
 - Fixed Crispins complaint on scroll wheeling
 - Moved Rank to after player name

@@ -44,7 +44,7 @@ local OTGCommand = {}
 -----------------------------------------------------------------------------------------------
 local kcrSelectedText = ApolloColor.new("UI_BtnTextHoloPressedFlyby")
 local kcrNormalText = ApolloColor.new("UI_BtnTextHoloNormal")
-local kVersion = "0.6-beta"
+local kVersion = "0.7-beta"
  
 -----------------------------------------------------------------------------------------------
 -- Initialization
@@ -62,6 +62,8 @@ function OTGCommand:new(o)
 	o.tSortBy = "Player"
 	o.bDocLoaded = false
 	o.bResetData = false
+	o.tLastGuildRosterImported = nil
+	o.tGuildRosterMergeDelay = 14400
 		
     return o
 end
@@ -84,17 +86,19 @@ function OTGCommand:OnSave(eType)
 	end
 	
 	tSave = {}
-	if self.bResetData == false then
-		tSave["tPlayers"] = self.tPlayers
+	if self.bResetData == false then		
 		tSave["tGuildTable"] = self.tGuildTable
 		tSave["tPlayersCount"] = self.tPlayersCount
-		tSave["tSortBy"] = self.tSortBy	
+		tSave["tSortBy"] = self.tSortBy
+		tSave["tLastGuildRosterImported"] = self.tLastGuildRosterImported	
+		tSave["tGuildRosterMergeDelay"] = self.tGuildRosterMergeDelay
 		tSave["VERSION"] = kVersion
-	else
-		tSave["tPlayers"] = {}
+	else		
 		tSave["tGuildTable"] = {}
 		tSave["tPlayersCount"] = 0
 		tSave["tSortBy"] = "Player"
+		tSave["tLastGuildRosterImported"] = nil
+		tSave["tGuildRosterMergeDelay"] = 0
 		tSave["VERSION"] = kVersion
 	end		
 	return tSave	
@@ -103,9 +107,6 @@ end
 function OTGCommand:OnRestore(eType, tSavedData)
 	if eType ~= GameLib.CodeEnumAddonSaveLevel.General then return nil end
 	if not tSavedData then return end
-	if tSavedData.tPlayers ~= nil then
-    	self.tPlayers = tSavedData.tPlayers
-	end
 	if tSavedData.tGuildTable ~= nil then
 		self.tGuildTable = tSavedData.tGuildTable
 	end
@@ -115,6 +116,16 @@ function OTGCommand:OnRestore(eType, tSavedData)
 	if tSavedData.tSortBy ~= nil then
 		self.tSortBy = tSavedData.tSortBy					
 	end	
+	if tSavedData.tLastGuildRosterImported ~= nil then
+		self.tLastGuildRosterImported = tSavedData.tLastGuildRosterImported
+	else 
+		self.tLastGuildRosterImported = 0
+	end
+	if tSavedData.tGuildRosterMergeDelay ~= nil then
+		self.tGuildRosterMergeDelay = tSavedData.tGuildRosterMergeDelay
+	else
+		self.tGuildRosterMergeDelay = 14400
+	end
 end
 
 
@@ -150,7 +161,7 @@ function OTGCommand:OnDocLoaded()
 
 		-- self.timer = ApolloTimer.Create(10.0, true, "OnTimer", self)
 
-		-- Do additional Addon initialization here
+		-- Do additional Addon initialization here	
 		self.wndMain:FindChild("SortByButton"):AttachWindow(self.wndMain:FindChild("EditSortContainer"))
 		if self.tSortBy == "Player" then
 			self.wndMain:FindChild("SortByButton"):SetText("Sort by: Player")
@@ -386,7 +397,8 @@ end
 
 -- Based on addon GuildRoster Tools by NCSoft
 function OTGCommand:OnGuildRoster(guildCurr, tGuildRoster)	
-		tDataExport = {}
+	local currTime = os.time()
+	if (currTime - self.tLastGuildRosterImported) > self.tGuildRosterMergeDelay then
 		local nDate= os.date("%m/%d/%y")
 		local nTime= os.date("%H:%M")
 		local strRealmName = GameLib.GetRealmName()
@@ -399,14 +411,13 @@ function OTGCommand:OnGuildRoster(guildCurr, tGuildRoster)
 		local timeStamp = (nTime.. " " ..nDate) 
 		strTimeExported = timeStamp
 		strHeaders = ("Server"..",".."Guild"..",".."Forum Name"..",".."Player Name"..",".."Level"..",".."Rank"..",".."Class"..",".."Path"..",".."Last Online"..",".."Days Offline")
-	
 
 		for key, tCurr in pairs(tGuildRoster) do		
-			 if tRanks[tCurr.nRank] and tRanks[tCurr.nRank].strName then
+				if tRanks[tCurr.nRank] and tRanks[tCurr.nRank].strName then
 				strRank = tRanks[tCurr.nRank].strName
 				strRank = FixXMLString(strRank)	
-			 end
-	
+			end
+
 			--map tRoster values
 			local strRealm = strRealmName
 			local strNote = tCurr.strNote
@@ -417,32 +428,37 @@ function OTGCommand:OnGuildRoster(guildCurr, tGuildRoster)
 			local strLastOnline = self:HelperConvertToTime(tCurr.fLastOnline)
 			local nRawLastOnline = tCurr.fLastOnline
 			strAttributes = (strClass .. ", " .. nLevel .. ", " .. strPlayerPath)  
-			
+		
 			if self.tGuildTable[strNote] == nil then
 				self.tPlayersCount = self.tPlayersCount + 1
 				self.tGuildTable[strNote] = {				
-				   	rank = strRank,
+					rank = strRank,
 					dkp = 0,
-				   	toons = {},
-				   	tooncount = 1
+					toons = {},
+					tooncount = 1
 				}				
 				self.tGuildTable[strNote].toons[strName] = {
-				    class = strClass,
-				    level = nLevel,
+					class = strClass,
+					level = nLevel,
 					path = strPlayerPath
 				}			
 			else
 				if self.tGuildTable[strNote].toons[strName] == nil then
-				    self.tGuildTable[strNote].tooncount = self.tGuildTable[strNote].tooncount+1			
+					self.tGuildTable[strNote].tooncount = self.tGuildTable[strNote].tooncount+1			
 				end
 				self.tGuildTable[strNote].toons[strName] = {
-				    class = strClass,
-				    level = nLevel,
+					class = strClass,
+					level = nLevel,
 					path = strPlayerPath
 				}	
 			end
 		end
 		self:PopulateGuildList()
+		self.tLastGuildRosterImported = os.time()
+		if self.tGuildRosterMergeDelay == 0 then
+		   self.tGuildRosterMergeDelay = 14400 
+		end
+	end
 end
 
 function OTGCommand:PopulateGuildList()
